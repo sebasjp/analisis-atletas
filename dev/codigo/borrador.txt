@@ -1,0 +1,55 @@
+# codigo deprecated
+# from sklearn.decomposition import PCA
+# PCA con sklearn
+# pca = PCA(n_components=2)
+# Xpca = pca.fit_transform(Xstd)
+# print( np.cumsum(pca.explained_variance_ratio_) )
+
+# plot_correlation_circle(X, Xpca, vars_use)
+# plot_individuals(Xpca, color)
+
+# contrib_plot = contrib.sum(axis=1).copy()
+# contrib_plot = contrib_plot.sort_values()
+
+# plt.figure(figsize=(12, 4))
+# plt.barh(y=contrib_plot.index, width=contrib_plot)
+# plt.vlines(
+#     x=2./len(vars_use),
+#     ymin=0, 
+#     ymax=len(vars_use), 
+#     linestyles="dashed", 
+#     color="red"
+# )
+# plt.title(f"Contribución de cada variable a los dos primeros componentes")
+# plt.show()
+
+
+# outliers
+from sklearn.cluster import DBSCAN
+outliers = DBSCAN(eps=1, min_samples=4).fit(_)
+
+# Grafico de los outliers
+df_out = df_sit.copy()
+df_out["out"] = [str(x) for x in outliers.labels_]
+color_var = "out"
+color_arr = df_out[color_var].values
+plot_individuals(_, color_arr, color_var)
+print(df_out["out"].value_counts())
+
+
+# iteracion dbscan componente 1
+'emg_der_vl',
+'velocidad_der_vel', 
+'frv_der_frv', 
+'emg_der_st'
+
+
+#lat = bf/vl
+
+# 0.091101/0.221277 -1
+# 0.207869/0.160485 -1
+
+
+
+clusterer = DBSCAN(min_samples=5, eps=0.3)
+clusterer = clusterer.fit(Xpca[:,0].reshape(-1, 1))

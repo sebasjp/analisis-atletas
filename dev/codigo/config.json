@@ -1,0 +1,10 @@
+{
+    "data_name": "CYCLONES",
+    "pierna": "DER",
+    "situaciones": {
+        "sit1": {"var_interes": "momentos_rod_{pierna}_y", "min": true},
+        "sit2": {"var_interes": "velocidad_{pierna}_vel", "min": true},
+        "sit3": {"var_interes": "frv_{pierna}_frv", "min": false}
+    },
+    "situacion_analizar": "sit1"
+}

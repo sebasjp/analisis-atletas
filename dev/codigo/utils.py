@@ -3,6 +3,7 @@ import seaborn as sns
 from matplotlib.patches import Circle
 import numpy as np
 import pandas as pd
+# from sklearn.preprocessing import StandardScaler
 
 
 def get_correlation_circle_data(X, Xpca):
@@ -52,11 +53,17 @@ def plot_correlation_circle(X, Xpca, feature_names: list):
     plt.show()
 
 
-def plot_individuals(Xpca, color: list=None):
+def plot_individuals(
+    Xpca, 
+    rowindex: list,
+    color: list=None, 
+    colorName: str=None
+):
 
     # array to DataFrame
     Xpca_df = pd.DataFrame(
         Xpca, 
+        index=rowindex,
         columns=[f"PC{i+1}" for i in range(Xpca.shape[1])]
     )
 
@@ -65,10 +72,16 @@ def plot_individuals(Xpca, color: list=None):
     if color is not None:
         Xpca_df["color"] = color
         sns.scatterplot(
-            x="PC1", y="PC2",
+            x="PC1", 
+            y="PC2",
             hue="color",
             data=Xpca_df
         )
+        if colorName:
+            plt.legend(
+                title=colorName, 
+                loc='upper left'
+            )
     else:
         sns.scatterplot(
             x="PC1", y="PC2",
@@ -88,7 +101,7 @@ def plot_individuals(Xpca, color: list=None):
     # (optionally) Add labels to each point based on their index in the original dataframe
     for i in range(Xpca.shape[0]):
         # plt.annotate(df_sit.index[i][0], (Xpca[i, 0], Xpca[i, 1]), fontsize=8)
-        plt.annotate(i, (Xpca[i, 0], Xpca[i, 1]), fontsize=8)
+        plt.annotate(Xpca_df.index[i], (Xpca[i, 0], Xpca[i, 1]), fontsize=8)
         # This might be useful when doing outlier detection
 
     # Add grid in the background
@@ -162,7 +175,7 @@ def biplot(X, Xpca, feature_names: list,  color: list=None):
     plt.show()
 
 
-class MyPCA:
+class PCA:
     
     def __init__(self, n_components, method):
         self.n_components = n_components
@@ -205,3 +218,61 @@ class MyPCA:
         X_proj = X_std.dot(self.components.T)
         
         return X_proj
+    
+
+def run_complete_pca(
+    data: pd.DataFrame, 
+    vars_use: list, 
+    rowindex: list,
+    color_var: str=None
+):
+
+    X = data[vars_use].values.copy()
+    # Xstd = StandardScaler().fit_transform(X)
+
+    # ejecucion del PCA
+    pca = PCA(n_components=2, method="spearman").fit(X)
+
+    print('Explained variance ratio: ', pca.explained_variance_ratio)
+    print('Cumulative explained variance: ', pca.cum_explained_variance)
+
+    Xpca = pca.transform(X)
+    print('Transformed data shape:', Xpca.shape)
+
+    # Graficos
+    print("Circulo de correlaciones de las variables")
+    plot_correlation_circle(X, Xpca, vars_use)
+
+    print("Grafico de las ejecuciones de los movimientos")
+    color_arr = data[color_var].values
+    print(f"Color de los puntos de acuerdo con la variable: {color_var}")
+    plot_individuals(Xpca, rowindex, color_arr, color_var)
+
+    print("Grafico combinado: variables+movimientos")
+    biplot(X, Xpca, vars_use)
+
+    ##===== Contribuciones a las componentes ======##
+    # u (vector propio) -> components: https://pca4ds.github.io/formulas-for-pca.html
+    # contribuciones de las variables a las componentes
+    thr = 1./len(vars_use)
+    contrib = pd.DataFrame(pca.components**2, columns=vars_use).T
+    for x in contrib.columns:
+        contrib_plot = contrib.copy()
+        contrib_plot = contrib_plot.sort_values([x])
+        print(
+            f"Variables que más contribuyen a PC{x+1}:\n", 
+            contrib_plot[contrib_plot[x]>thr].index.tolist()[::-1]
+        )
+        plt.figure(figsize=(12, 4))
+        plt.barh(y=contrib_plot.index, width=contrib_plot[x])
+        plt.vlines(
+            x=thr, 
+            ymin=0, 
+            ymax=len(vars_use), 
+            linestyles="dashed", 
+            color="red"
+        )
+        plt.title(f"Contribución de cada variable a PC{x+1}")
+        plt.show()
+
+    return Xpca
